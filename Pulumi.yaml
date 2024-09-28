@@ -1,4 +1,5 @@
 name: gummicube-demo
+main: src/index.ts
 runtime:
   name: nodejs
   options:
