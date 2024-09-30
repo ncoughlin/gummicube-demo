@@ -14,6 +14,6 @@ const api = new apigateway.RestAPI("api", {
   ],
 });
 
+// exports
 export const url = api.url;
-
-export const dbInstance = sampleDataDB;
+export const dbEndpoint = sampleDataDB.endpoint;
