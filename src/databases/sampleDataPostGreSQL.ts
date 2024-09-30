@@ -31,6 +31,8 @@ const createSchemaAndTable = new aws.lambda.CallbackFunction(
     "createSchemaAndTable",
     {
         callback: async (event: eventType, context) => {
+          console.log("🌎 event", event);
+
             const { Client } = require("pg");
             const client = new Client({
                 host: event.dbEndpoint,
