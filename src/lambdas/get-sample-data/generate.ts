@@ -63,9 +63,9 @@ export const getSampleData = new aws.lambda.Function("getSampleData", {
   environment: {
     variables: {
       DB_HOST: sampleDataDB.endpoint.apply((e) => e.split(":")[0]),
-      DB_USER: "your_db_username", // Replace with your actual db username
-      DB_PASS: "your_db_password", // Replace with your actual db password
-      DB_NAME: "your_db_name", // Replace with your actual db name
+      DB_USER: db_username,
+      DB_PASS: db_password,
+      DB_NAME: db_name,
     },
   },
   vpcConfig: {
