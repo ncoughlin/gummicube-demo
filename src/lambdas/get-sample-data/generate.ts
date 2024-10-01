@@ -23,6 +23,10 @@ new aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachment", {
   role: lambdaRole.name,
   policyArn: aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole,
 });
+new aws.iam.RolePolicyAttachment("lambdaRoleVPCAccessPolicyAttachment", {
+  role: lambdaRole.name,
+  policyArn: aws.iam.ManagedPolicies.AWSLambdaVPCAccessExecutionRole,
+});
 
 // Define the RDS instance ID
 const dbInstanceId = sampleDataDB.id;
