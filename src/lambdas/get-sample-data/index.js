@@ -36,7 +36,6 @@ exports.handler = async (event, context) => {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
-    // database: "sample-data-postgre-sqld20297f ",
     database: process.env.DB_NAME,
     ssl: {
       rejectUnauthorized: false, // For self-signed certificates
