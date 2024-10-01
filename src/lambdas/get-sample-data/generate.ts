@@ -34,30 +34,40 @@ const dbInstance = dbInstanceId.apply((id) =>
   })
 );
 
-// Extract the VPC security groups and subnet group
-const vpcSecurityGroups = dbInstance.apply(
-  (instance) => instance.vpcSecurityGroups
+// Extract the DB subnet group name
+const dbSubnetGroupName = dbInstance.apply(
+  (instance) => instance.dbSubnetGroup
 );
-const dbSubnetGroup = dbInstance.apply((instance) => instance.dbSubnetGroup);
+
+// Fetch the subnet IDs from the DB subnet group
+const dbSubnetGroup = dbSubnetGroupName.apply((name) =>
+  aws.rds.getSubnetGroup({
+    name: name,
+  })
+);
+
+const subnetIds = dbSubnetGroup.apply((group) => group.subnetIds);
 
 // Create the Lambda function
 export const getSampleData = new aws.lambda.Function("getSampleData", {
-  runtime: aws.lambda.NodeJS12dXRuntime,
+  runtime: aws.lambda.Runtime.NodeJS18dX,
   code: new pulumi.asset.AssetArchive({
-    ".": new pulumi.asset.FileArchive("./lambdas/get-sample-data"), // Path to your Lambda function code
+    ".": new pulumi.asset.FileArchive("./lambdas/get-sample-data"), // Path to lambda index file
   }),
   handler: "index.handler",
   role: lambdaRole.arn,
   environment: {
     variables: {
       DB_HOST: sampleDataDB.endpoint.apply((e) => e.split(":")[0]),
-      DB_USER: db_username,
-      DB_PASS: db_password,
-      DB_NAME: db_name,
+      DB_USER: "your_db_username", // Replace with your actual db username
+      DB_PASS: "your_db_password", // Replace with your actual db password
+      DB_NAME: "your_db_name", // Replace with your actual db name
     },
   },
   vpcConfig: {
-    subnetIds: [dbSubnetGroup],
-    securityGroupIds: vpcSecurityGroups,
+    subnetIds: subnetIds,
+    securityGroupIds: dbInstance.apply((instance) =>
+      instance.vpcSecurityGroups.map((sg) => sg)
+    ),
   },
 });
