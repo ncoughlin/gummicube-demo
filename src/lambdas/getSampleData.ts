@@ -1,17 +1,63 @@
 import * as aws from "@pulumi/aws";
+import * as pulumi from "@pulumi/pulumi";
+import { sampleDataDB } from "../databases/sampleDataPostGreSQL";
 
-export const getSampleData = new aws.lambda.CallbackFunction("f", {
-    callback: async (ev, ctx) => {
-      // fetch data from RDS database
-      const data = [
-        { name: "Alice", age: 30 },
-        { name: "Bob", age: 35 },
-        { name: "Charlie", age: 40 },
-      ];
-  
-      return {
-        statusCode: 200,
-        body: { data: data },
-      };
+// Initialize the Pulumi config (to retrieve variables)
+const config = new pulumi.Config();
+
+// Retrieve the database variables
+// ** these values should be moved to a secret manager
+const db_username = config.require("db_username");
+const db_password = config.require("db_password");
+const db_name = config.require("db_name");
+
+// Create an IAM role for the Lambda function
+const lambdaRole = new aws.iam.Role("lambdaRole", {
+  assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+    Service: "lambda.amazonaws.com",
+  }),
+});
+
+// Attach the necessary policies to the role
+new aws.iam.RolePolicyAttachment("lambdaRolePolicyAttachment", {
+  role: lambdaRole.name,
+  policyArn: aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole,
+});
+
+// Define the RDS instance ID
+const dbInstanceId = sampleDataDB.id;
+
+// Fetch the RDS database instance details
+const dbInstance = dbInstanceId.apply((id) =>
+  aws.rds.getInstance({
+    dbInstanceIdentifier: id,
+  })
+);
+
+// Extract the VPC security groups and subnet group
+const vpcSecurityGroups = dbInstance.apply(
+  (instance) => instance.vpcSecurityGroups
+);
+const dbSubnetGroup = dbInstance.apply((instance) => instance.dbSubnetGroup);
+
+// Create the Lambda function
+export const getSampleData = new aws.lambda.Function("getSampleData", {
+  runtime: aws.lambda.NodeJS12dXRuntime,
+  code: new pulumi.asset.AssetArchive({
+    ".": new pulumi.asset.FileArchive("./getSampleDataLambda"), // Path to your Lambda function code
+  }),
+  handler: "index.handler",
+  role: lambdaRole.arn,
+  environment: {
+    variables: {
+      DB_HOST: sampleDataDB.endpoint.apply((e) => e.split(":")[0]),
+      DB_USER: db_username,
+      DB_PASS: db_password,
+      DB_NAME: db_name,
     },
-  });
+  },
+  vpcConfig: {
+    subnetIds: [dbSubnetGroup],
+    securityGroupIds: vpcSecurityGroups,
+  },
+});

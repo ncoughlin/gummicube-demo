@@ -22,74 +22,78 @@ export const sampleDataDB = new aws.rds.Instance("sample-data-postgre-sql", {
   port: 5432,
 });
 
-type eventType = {
-  db_endpoint: string;
-  db_name: string;
-  db_username: string;
-  db_password: string;
-};
 
-// Create a schema and a table using a Lambda function
-const createSampleDbSchemaAndTable = new aws.lambda.CallbackFunction(
-  "createSchemaAndTable",
-  {
-    callback: async (event: eventType, context) => {
-      console.log("🌎 event", event);
 
-      const { Client } = require("pg");
-      const client = new Client({
-        host: event.db_endpoint,
-        database: event.db_name,
-        user: event.db_username,
-        password: event.db_password,
-      });
+// ⚠ For now we will move the schema and table creation to a manual process
+// as i'm not sure we want to manage this with pulumi anyways...
 
-      await client.connect();
-      await client.query(`CREATE SCHEMA IF NOT EXISTS myschema`);
-      await client.query(
-        `CREATE TABLE IF NOT EXISTS myschema.mytable (id SERIAL PRIMARY KEY, data VARCHAR(100))`
-      );
-      await client.end();
-    },
-  }
-);
+// // Create a schema and a table using a Lambda function
+// type eventType = {
+//   db_endpoint: string;
+//   db_name: string;
+//   db_username: string;
+//   db_password: string;
+// };
 
-// Create an SNS Topic
-const snsTopic = new aws.sns.Topic("sampleDataDbCreationTopic");
+// const createSampleDbSchemaAndTable = new aws.lambda.CallbackFunction(
+//   "createSchemaAndTable",
+//   {
+//     callback: async (event: eventType, context) => {
+//       console.log("🌎 event", event);
 
-// Subscribe the Lambda function to the SNS Topic
-const snsSubscription = new aws.sns.TopicSubscription(
-  "sampleDataDbCreationSnsSubscription",
-  {
-    topic: snsTopic.arn,
-    protocol: "lambda",
-    endpoint: createSampleDbSchemaAndTable.arn,
-  }
-);
+//       const { Client } = require("pg");
+//       const client = new Client({
+//         host: event.db_endpoint,
+//         database: event.db_name,
+//         user: event.db_username,
+//         password: event.db_password,
+//       });
 
-// Grant SNS permission to invoke the Lambda function
-const lambdaPermission = new aws.lambda.Permission(
-  "createSchemaAndTableLambdaPermission",
-  {
-    action: "lambda:InvokeFunction",
-    function: createSampleDbSchemaAndTable.name,
-    principal: "sns.amazonaws.com",
-    sourceArn: snsTopic.arn,
-  }
-);
+//       await client.connect();
+//       await client.query(`CREATE SCHEMA IF NOT EXISTS myschema`);
+//       await client.query(
+//         `CREATE TABLE IF NOT EXISTS myschema.mytable (id SERIAL PRIMARY KEY, data VARCHAR(100))`
+//       );
+//       await client.end();
+//     },
+//   }
+// );
 
-// Create an RDS Event Subscription
-const rdsInvoke = new aws.rds.EventSubscription(
-  "rdsInvoke",
-  {
-    snsTopic: snsTopic.arn,
-    sourceType: "db-instance",
-    // sourceIds: [sampleDataDB.id],
-    sourceIds: [sampleDataDB.identifier],
-    eventCategories: ["creation"],
-  },
-  { dependsOn: [sampleDataDB, snsSubscription, lambdaPermission] }
-);
+// // Create an SNS Topic
+// const snsTopic = new aws.sns.Topic("sampleDataDbCreationTopic");
 
-// Export the database endpoint
-export const dbEndpoint = sampleDataDB.endpoint;
+// // Subscribe the Lambda function to the SNS Topic
+// const snsSubscription = new aws.sns.TopicSubscription(
+//   "sampleDataDbCreationSnsSubscription",
+//   {
+//     topic: snsTopic.arn,
+//     protocol: "lambda",
+//     endpoint: createSampleDbSchemaAndTable.arn,
+//   }
+// );
+
+// // Grant SNS permission to invoke the Lambda function
+// const lambdaPermission = new aws.lambda.Permission(
+//   "createSchemaAndTableLambdaPermission",
+//   {
+//     action: "lambda:InvokeFunction",
+//     function: createSampleDbSchemaAndTable.name,
+//     principal: "sns.amazonaws.com",
+//     sourceArn: snsTopic.arn,
+//   }
+// );
+
+// // Create an RDS Event Subscription
+// const rdsInvoke = new aws.rds.EventSubscription(
+//   "rdsInvoke",
+//   {
+//     snsTopic: snsTopic.arn,
+//     sourceType: "db-instance",
+//     // sourceIds: [sampleDataDB.id],
+//     sourceIds: [sampleDataDB.identifier],
+//     eventCategories: ["creation"],
+//   },
+//   { dependsOn: [sampleDataDB, snsSubscription, lambdaPermission] }
+// );
+
+
