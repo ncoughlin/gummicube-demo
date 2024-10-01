@@ -1,22 +1,29 @@
-const { Client } = require('pg');
+const { Client } = require("pg");
 
 exports.handler = async (event) => {
-    const client = new Client({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: process.env.DB_NAME,
-    });
+    console.log("🌎 event", event);
 
-    await client.connect();
+  const client = new Client({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+  });
 
-    try {
-        const res = await client.query('SELECT * FROM mytable'); // Replace with your query
-        return {
-            statusCode: 200,
-            body: JSON.stringify(res.rows),
-        };
-    } finally {
-        await client.end();
-    }
+  await client.connect();
+
+  try {
+    const res = await client.query("SELECT * FROM mytable"); // Replace with your query
+    return {
+      statusCode: 200,
+      body: JSON.stringify(res.rows),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify(error),
+    };
+  } finally {
+    await client.end();
+  }
 };
