@@ -1,6 +1,6 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import { sampleDataDB } from "../databases/sampleDataPostGreSQL";
+import { sampleDataDB } from "../../databases/sampleDataPostGreSQL";
 
 // Initialize the Pulumi config (to retrieve variables)
 const config = new pulumi.Config();
@@ -44,7 +44,7 @@ const dbSubnetGroup = dbInstance.apply((instance) => instance.dbSubnetGroup);
 export const getSampleData = new aws.lambda.Function("getSampleData", {
   runtime: aws.lambda.NodeJS12dXRuntime,
   code: new pulumi.asset.AssetArchive({
-    ".": new pulumi.asset.FileArchive("./getSampleDataLambda"), // Path to your Lambda function code
+    ".": new pulumi.asset.FileArchive("./lambdas/get-sample-data"), // Path to your Lambda function code
   }),
   handler: "index.handler",
   role: lambdaRole.arn,

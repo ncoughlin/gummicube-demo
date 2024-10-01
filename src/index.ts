@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import * as apigateway from "@pulumi/aws-apigateway";
-import { getSampleData } from "./lambdas/getSampleData";
+import { getSampleData } from "./lambdas/get-sample-data/generate";
 import { sampleDataDB } from "./databases/sampleDataPostGreSQL";
 
 const api = new apigateway.RestAPI("api", {
