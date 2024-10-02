@@ -9,6 +9,11 @@ exports.handler = async (event, context) => {
 
     const errorResponse = {
       statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "GET,OPTIONS",
+      },
       message: error.message,
       requestId: context.awsRequestId,
       function_name: process.env.AWS_LAMBDA_FUNCTION_NAME,
@@ -54,6 +59,11 @@ exports.handler = async (event, context) => {
 
     return {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "GET,OPTIONS",
+      },
       body: JSON.stringify(res.rows),
     };
   } catch (error) {
